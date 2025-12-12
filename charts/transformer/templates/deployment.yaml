@@ -26,14 +26,37 @@ spec:
           - name: http
             containerPort: {{.Values.service.port}}
             protocol: TCP
+        {{- if .Values.livenessProbe }}
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        {{- else }}
         livenessProbe:
           httpGet:
             path: /health
             port: http
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        {{- end }}
+        {{- if .Values.readinessProbe }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
+        {{- else }}
         readinessProbe:
           httpGet:
             path: /health
             port: http
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 10
+        {{- end }}
+        {{- if .Values.startupProbe }}
+        startupProbe:
+          {{- toYaml .Values.startupProbe | nindent 10 }}
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         env:
