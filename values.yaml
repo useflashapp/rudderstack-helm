@@ -147,6 +147,8 @@ serviceAccount:
   name: ""
 
 postgresql:
+  # Set enabled: false to use external Postgres instead of containerized Postgres
+  enabled: true
   nameOverride: "rudderstack-postgresql"
   postgresqlUsername: rudder
   postgresqlPassword: password
@@ -169,6 +171,20 @@ postgresql:
       memory: 2048Mi
     limits:
       memory: 4096Mi
+  # External Postgres configuration (used when enabled: false)
+  external:
+    # host: "your-postgres-endpoint.example.com"  # Optional: set directly or use secret
+    # postgresqlUsername: "rudder"  # Optional: set directly or use secret
+    # postgresqlPassword: "password"  # Optional: set directly or use secret
+    secretName: ""  # Optional: Secret name containing external Postgres credentials (only used if host/username/password not set directly)
+    # Secret should contain keys: postgresqlHost, postgresqlUsername, postgresqlPassword
+    port: "5432"  # Postgres port
+    database: "jobsdb"  # Database name
+    # SSL/TLS configuration (required for some managed Postgres services)
+    sslmode: "require"  # Options: disable, allow, prefer, require, verify-ca, verify-full
+    # sslcert: ""  # Path to client certificate (optional)
+    # sslkey: ""  # Path to client key (optional)
+    # sslrootcert: ""  # Path to root CA certificate (optional)
 
 telegraf_sidecar:
   enabled: true

@@ -103,6 +103,61 @@ spec:
             {{- end}}
           - name: DEST_TRANSFORM_URL
             value: "http://{{ include "transformer.fullname" . }}:{{ .Values.transformer.service.port}}"
+          {{- if and (hasKey .Values.postgresql "enabled") (eq .Values.postgresql.enabled false) }}
+          # External Postgres configuration (postgresql.enabled = false)
+          - name: COMPUTE_DB_HOST_IN_K8S
+            value: "false"
+          {{- if .Values.postgresql.external }}
+          - name: JOBS_DB_HOST
+            {{- if .Values.postgresql.external.host }}
+            value: "{{ .Values.postgresql.external.host }}"
+            {{- else if .Values.postgresql.external.secretName }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgresql.external.secretName }}
+                key: "postgresqlHost"
+            {{- end }}
+          - name: JOBS_DB_PORT
+            value: "{{ .Values.postgresql.external.port | default "5432" }}"
+          - name: JOBS_DB_USER
+            {{- if .Values.postgresql.external.postgresqlUsername }}
+            value: "{{ .Values.postgresql.external.postgresqlUsername }}"
+            {{- else if .Values.postgresql.external.secretName }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgresql.external.secretName }}
+                key: "postgresqlUsername"
+            {{- end }}
+          - name: JOBS_DB_PASSWORD
+            {{- if .Values.postgresql.external.postgresqlPassword }}
+            value: "{{ .Values.postgresql.external.postgresqlPassword }}"
+            {{- else if .Values.postgresql.external.secretName }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.postgresql.external.secretName }}
+                key: "postgresqlPassword"
+            {{- end }}
+          - name: JOBS_DB_DB_NAME
+            value: "{{ .Values.postgresql.external.database | default .Values.postgresql.postgresqlDatabase }}"
+          # SSL/TLS configuration for external Postgres (required by some managed Postgres services)
+          # RudderStack uses JOBS_DB_SSL_MODE for SSL configuration
+          - name: JOBS_DB_SSL_MODE
+            value: "{{ .Values.postgresql.external.sslmode | default "require" }}"
+          {{- if .Values.postgresql.external.sslcert }}
+          - name: JOBS_DB_SSL_CERT
+            value: "{{ .Values.postgresql.external.sslcert }}"
+          {{- end }}
+          {{- if .Values.postgresql.external.sslkey }}
+          - name: JOBS_DB_SSL_KEY
+            value: "{{ .Values.postgresql.external.sslkey }}"
+          {{- end }}
+          {{- if .Values.postgresql.external.sslrootcert }}
+          - name: JOBS_DB_SSL_ROOT_CERT
+            value: "{{ .Values.postgresql.external.sslrootcert }}"
+          {{- end }}
+          {{- end }}
+          {{- else }}
+          # Containerized Postgres configuration (default)
           - name: COMPUTE_DB_HOST_IN_K8S
             value: "true"
           - name: POSTGRES_POD_NAME
@@ -119,6 +174,7 @@ spec:
             value: "{{ .Values.postgresql.postgresqlDatabase }}"
           - name: JOBS_DB_PASSWORD
             value: "{{ .Values.postgresql.postgresqlPassword }}"
+          {{- end }}
           - name: INSTANCE_ID
             valueFrom:
               fieldRef:
