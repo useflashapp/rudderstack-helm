@@ -1,4 +1,4 @@
-{{- if (.Values.enabled | default true) }}
+{{- if or (not (hasKey .Values "enabled")) (ne (.Values.enabled | toString) "false") }}
 apiVersion: v1
 kind: Service
 metadata:

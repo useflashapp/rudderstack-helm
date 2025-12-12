@@ -1,4 +1,4 @@
-{{ if and (.Values.enabled | default true) (or (.Files.Glob "files/postgresql.conf") (.Files.Glob "files/pg_hba.conf") .Values.postgresqlConfiguration .Values.pgHbaConfiguration) (not .Values.configurationConfigMap) }}
+{{ if and (or (not (hasKey .Values "enabled")) (ne (.Values.enabled | toString) "false")) (or (.Files.Glob "files/postgresql.conf") (.Files.Glob "files/pg_hba.conf") .Values.postgresqlConfiguration .Values.pgHbaConfiguration) (not .Values.configurationConfigMap) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
